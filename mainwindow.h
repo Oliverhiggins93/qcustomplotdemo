@@ -35,12 +35,13 @@ private slots:
 	void mouseWheel();
 	void addRandomGraph();
 	void addRealtimeGraph();
+	void addCpuTempGraph();
 	void removeSelectedGraph();
 	void removeAllGraphs();
 	void contextMenuRequest(QPoint pos);
 	void moveLegend();
 	void graphClicked(QCPAbstractPlottable *plottable, int dataIndex);
-  
+	
 private:
 	QWidget *centralWidget;
 	QVBoxLayout *verticalLayout;

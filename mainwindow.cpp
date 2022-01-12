@@ -54,15 +54,15 @@ MainWindow::MainWindow(QWidget *parent) :
 	customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
 				    QCP::iSelectLegend | QCP::iSelectPlottables);
 	customPlot->xAxis->setRange(-1, 8);
-	customPlot->yAxis->setRange(-5, 5);
+	customPlot->yAxis->setRange(-5, 100);
 	customPlot->axisRect()->setupFullAxesBox();
   
 	customPlot->plotLayout()->insertRow(0);
 	QCPTextElement *title = new QCPTextElement(customPlot, titleTxt, QFont("sans", 17, QFont::Bold));
 	customPlot->plotLayout()->addElement(0, 0, title);
   
-	customPlot->xAxis->setLabel("x Axis");
-	customPlot->yAxis->setLabel("y Axis");
+	customPlot->xAxis->setLabel("Time");
+	customPlot->yAxis->setLabel("CPU Temperature");
 	customPlot->legend->setVisible(true);
 	QFont legendFont = font();
 	legendFont.setPointSize(10);
@@ -70,9 +70,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	customPlot->legend->setSelectedFont(legendFont);
 	customPlot->legend->setSelectableParts(QCPLegend::spItems); // legend box shall not be selectable, only legend items
 
-	addRealtimeGraph();
-	addRandomGraph();
-	addRandomGraph();
+	//addRealtimeGraph();
+	//addRandomGraph();
+	//addRandomGraph();
+	addCpuTempGraph();
   
 	// connect slot that ties some axis selections together (especially opposite axes):
 	connect(customPlot, SIGNAL(selectionChangedByUser()), this, SLOT(selectionChanged()));
@@ -211,6 +212,35 @@ void MainWindow::mouseWheel() {
 		customPlot->axisRect()->setRangeZoom(Qt::Horizontal|Qt::Vertical);
 }
 
+double getCpuTemp() {
+	FILE *temperatureFile;
+	double T;
+	temperatureFile = fopen ("/sys/class/thermal/thermal_zone0/temp", "r");
+	fscanf (temperatureFile, "%lf", &T);
+	T /= 1000;
+	printf ("The temperature is %6.3f C.\n", T);
+	fclose (temperatureFile);
+	return T;
+}
+
+void MainWindow::addCpuTempGraph() {
+	customPlot->addGraph();
+	customPlot->graph()->setName(QString("CPU Temperature"));
+	animdata.reset(new QCPDataContainer<QCPGraphData>);
+	
+	for(int i=0;i<nRealtimePoints;i++) {
+		QCPGraphData data(i*dt,0);
+		animdata->add(data);
+	}
+	customPlot->graph()->setData(animdata);
+	QPen graphPen;
+	graphPen.setColor(QColor(rand()%245+10, rand()%245+10, rand()%245+10));
+	graphPen.setWidthF(2);
+	customPlot->graph()->setPen(graphPen);
+	customPlot->replot();
+	startTimer(40);
+}
+
 void MainWindow::addRealtimeGraph() {
 	customPlot->addGraph();
 	customPlot->graph()->setName(QString("Realtime"));
@@ -240,7 +270,8 @@ void MainWindow::addRealtimeSample(double v) {
 void MainWindow::timerEvent( QTimerEvent * ) {
 	// demonstrates that adding a few samples before plotting speeds things up
 	for(int i = 0; i < 5; i++) {
-		addRealtimeSample(sin(t*5));
+		//addRealtimeSample(sin(t*5));
+		addRealtimeSample(getCpuTemp());
 		t = t + dt;
 	}
 	customPlot->replot();
