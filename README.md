@@ -2,8 +2,7 @@
 
 ![alt tag](screenshot.png)
 
-Plots two random waves and one "realtime" wave by adding samples
-continuously at at t=0.
+Plots the CPU temperature of the Raspberry Pi.
 
 ## Required packages
 
